@@ -600,15 +600,46 @@ export default {
 		}
 
 		// API Routes
-		if (url.pathname === "/api/chat") {
-			// Handle POST requests for chat
-			if (request.method === "POST") {
-				return handleChatRequest(request, env);
-			}
+if (url.pathname === "/api/chat") {
 
-			// Method not allowed for other request types
-			return new Response("Method not allowed", { status: 405 });
-		}
+	// CORS preflight request
+	if (request.method === "OPTIONS") {
+		return new Response(null, {
+			status: 204,
+			headers: {
+				"Access-Control-Allow-Origin": "https://zakariaelbaby.com",
+				"Access-Control-Allow-Methods": "POST, OPTIONS",
+				"Access-Control-Allow-Headers": "Content-Type",
+				"Access-Control-Max-Age": "86400",
+			},
+		});
+	}
+
+	// Handle POST requests for chat
+	if (request.method === "POST") {
+		const response = await handleChatRequest(request, env);
+
+		const headers = new Headers(response.headers);
+		headers.set(
+			"Access-Control-Allow-Origin",
+			"https://zakariaelbaby.com"
+		);
+		headers.set("Vary", "Origin");
+
+		return new Response(response.body, {
+			status: response.status,
+			statusText: response.statusText,
+			headers,
+		});
+	}
+
+	return new Response("Method not allowed", {
+		status: 405,
+		headers: {
+			"Access-Control-Allow-Origin": "https://zakariaelbaby.com",
+		},
+	});
+}
 
 		// Handle 404 for unmatched routes
 		return new Response("Not found", { status: 404 });
